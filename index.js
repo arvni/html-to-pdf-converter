@@ -23,7 +23,7 @@ app.post('', async (req, res) => {
     const fileName = data.fileName;
     try {
         if (!fs.existsSync(`${__dirname}/pdfs/${fileName}.pdf`)) {
-            const pdf = await pdfGenerator(data.html);;
+            const pdf = await pdfGenerator(data.html);
             await fs.promises.writeFile(`${__dirname}/pdfs/${fileName}.pdf`, pdf);
         }
         await res.sendFile(`${fileName}.pdf`, {
