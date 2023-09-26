@@ -2,8 +2,6 @@ const express = require("express");
 const fs = require("fs");
 const puppeteer = require('puppeteer');
 const path = require("path");
-import bodyParser from 'body-parser';
-
 
 const pdfGenerator = async (content) => {
     const browser = await puppeteer.launch();
@@ -19,13 +17,7 @@ const pdfGenerator = async (content) => {
 const app = express();
 const port = 3000;
 app.use(express.json({limit: '50mb'}));
-app.use(
-    bodyParser.urlencoded({
-        extended: true,
-        limit: '50mb',
-        parameterLimit: 50000,
-    }),
-);
+app.use(express.urlencoded({limit: '50mb'}))
 
 app.post('', async (req, res) => {
     let data = req.body;
