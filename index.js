@@ -2,6 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const puppeteer = require('puppeteer');
 const path = require("path");
+const  bodyParser = require('body-parser');
+
 
 const pdfGenerator = async (content) => {
     const browser = await puppeteer.launch();
@@ -17,7 +19,13 @@ const pdfGenerator = async (content) => {
 const app = express();
 const port = 3000;
 app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({limit: '50mb'}))
+app.use(
+    bodyParser.urlencoded({
+        extended: true,
+        limit: '50mb',
+        parameterLimit: 50000,
+    }),
+);
 
 app.post('', async (req, res) => {
     let data = req.body;
@@ -33,7 +41,7 @@ app.post('', async (req, res) => {
             if (err) {
                 console.log(err);
             } else {
-                fs.promises.unlink(`${__dirname}/pdfs/${fileName}.pdf`)
+
             }
 
         });
