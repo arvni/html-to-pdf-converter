@@ -16,7 +16,7 @@ const pdfGenerator = async (content) => {
 
     try {
         return await page.pdf({
-            margin: {bottom: '50mm'},
+            margin: {bottom: '50mm',left:0,right:0,top:0},
             printBackground: true,
         });
     } catch (e) {
