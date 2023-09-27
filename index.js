@@ -1,24 +1,34 @@
 const express = require("express");
 const fs = require("fs");
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const path = require("path");
-const  bodyParser = require('body-parser');
-
-
+const bodyParser = require('body-parser');
+//'chrome' | 'chrome-beta' | 'chrome-canary' | 'chrome-dev'
 const pdfGenerator = async (content) => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        // Use puppeteer-core's executablePath to reference the bundled Chromium
+        executablePath: puppeteer.executablePath('chrome'),
+    });
     const page = await browser.newPage();
     await page.setContent(content);
-    return await page.pdf({
-        margin: {bottom: '50mm'},
-        printBackground: true,
-    });
-}
 
+    try {
+        return await page.pdf({
+            margin: {bottom: '50mm'},
+            printBackground: true,
+        });
+    } catch (e) {
+        throw new Error(`Error generating PDF: ${e.message}`);
+    } finally {
+        await browser.close();
+    }
+}
 
 const app = express();
 const port = 3000;
-app.use(express.json({limit: '50mb'}));
+app.use(express.json({ limit: '50mb' }));
 app.use(
     bodyParser.urlencoded({
         extended: true,
@@ -30,24 +40,30 @@ app.use(
 app.post('', async (req, res) => {
     let data = req.body;
     const fileName = data.fileName;
+
     try {
         if (!fs.existsSync(`${__dirname}/pdfs/${fileName}.pdf`)) {
             const pdf = await pdfGenerator(data.html);
             await fs.promises.writeFile(`${__dirname}/pdfs/${fileName}.pdf`, pdf);
         }
-        await res.sendFile(`${fileName}.pdf`, {
+
+        res.sendFile(`${fileName}.pdf`, {
             root: path.join(__dirname + "/pdfs")
         }, function (err) {
             if (err) {
-                console.log(err);
+                console.error(err);
+                res.status(500).json({ message: "Error sending PDF" });
             } else {
-
+                fs.promises.unlink(`${__dirname}/pdfs/${fileName}.pdf`)
+                    .catch(error => console.error("Error deleting PDF file:", error));
             }
-
         });
     } catch (e) {
-        res.status(400);
-        res.send();
+        console.error(e);
+        res.status(400).json({ message: e.message });
     }
 });
-app.listen(port);
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
