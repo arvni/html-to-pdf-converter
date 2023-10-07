@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer-core');
 const path = require("path");
 const bodyParser = require('body-parser');
 //'chrome' | 'chrome-beta' | 'chrome-canary' | 'chrome-dev'
-const pdfGenerator = async (content) => {
+const pdfGenerator = async (content,margins=null) => {
     const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -16,7 +16,7 @@ const pdfGenerator = async (content) => {
 
     try {
         return await page.pdf({
-            margin: {bottom: '50mm',left:0,right:0,top:0},
+            margin: margins??{bottom: '50mm',left:0,right:0,top:0},
             printBackground: true,
         });
     } catch (e) {
@@ -43,7 +43,7 @@ app.post('', async (req, res) => {
 
     try {
         if (!fs.existsSync(`${__dirname}/pdfs/${fileName}.pdf`)) {
-            const pdf = await pdfGenerator(data.html);
+            const pdf = await pdfGenerator(data.html,data.margins);
             await fs.promises.writeFile(`${__dirname}/pdfs/${fileName}.pdf`, pdf);
         }
 
