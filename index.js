@@ -16,8 +16,10 @@ const pdfGenerator = async (content,margins=null) => {
 
     try {
         return await page.pdf({
-            margin: margins??{bottom: '50mm',left:0,right:0,top:0},
+            margin: margins??{bottom:0,left:0,right:0,top:0},
             printBackground: true,
+            preferCSSPageSize:true,
+            format:"A4",
         });
     } catch (e) {
         throw new Error(`Error generating PDF: ${e.message}`);
